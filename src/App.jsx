@@ -42,8 +42,8 @@ function App() {
 
   // Fungsi menjalankan backtest
   const runBacktest = (data, params) => {
-    const engine = new Backtester(data, params);
-    const result = engine.run();
+    const engine = new Backtester(params);
+    const result = engine.run(data);
     setResults(result);
     setTrades(result.trades?.slice(-5) || []);
   };
