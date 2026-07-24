@@ -1,6 +1,35 @@
 import React, { useCallback } from 'react';
 import './App.css';
 
+// Fetch real data dari Binance
+async function fetchBinanceData(symbol = 'BTCUSDT', interval = '1h', limit = 500) {
+  try {
+    console.log(`Fetching ${symbol} data...`);
+    const response = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    );
+    
+    if (!response.ok) throw new Error('Binance API error');
+    
+    const klines = await response.json();
+    
+    const data = klines.map(kline => ({
+      time: new Date(kline[0]).toISOString().split('T')[0],
+      open: parseFloat(kline[1]),
+      high: parseFloat(kline[2]),
+      low: parseFloat(kline[3]),
+      close: parseFloat(kline[4]),
+      volume: parseFloat(kline[7])
+    }));
+    
+    console.log(`Got ${data.length} candles from Binance`);
+    return data;
+  } catch (error) {
+    console.error('Binance fetch error:', error);
+    return generateMockData();
+  }
+}
+
 class Indicators {
   static calculateEMAArray(prices, period) {
     if (prices.length < period) return [];
@@ -151,13 +180,23 @@ export default function App() {
   const [emaLong, setEmaLong] = React.useState(21);
   const [rsiOversold, setRsiOversold] = React.useState(30);
   const [rsiOverbought, setRsiOverbought] = React.useState(70);
+  const [binanceSymbol, setBinanceSymbol] = React.useState('BTCUSDT');
+  const [binanceInterval, setBinanceInterval] = React.useState('1h');
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const runBacktest = useCallback(() => {
-    const mockData = generateMockData(45000, 300);
-    const backtester = new Backtester({ rsiPeriod, emaShort, emaLong, rsiOversold, rsiOverbought, positionSize: 0.95, slippage: 0.001, initialBalance: 10000 });
-    const backResult = backtester.run(mockData);
-    setResult(backResult);
-  }, [rsiPeriod, emaShort, emaLong, rsiOversold, rsiOverbought]);
+  const runBacktest = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchBinanceData(binanceSymbol, binanceInterval, 500);
+      const backtester = new Backtester({ rsiPeriod, emaShort, emaLong, rsiOversold, rsiOverbought, positionSize: 0.95, slippage: 0.001, initialBalance: 10000 });
+      const backResult = backtester.run(data);
+      setResult(backResult);
+    } catch (error) {
+      console.error('Backtest error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [rsiPeriod, emaShort, emaLong, rsiOversold, rsiOverbought, binanceSymbol, binanceInterval]);
 
   React.useEffect(() => {
     runBacktest();
@@ -171,7 +210,27 @@ export default function App() {
       </div>
       <div className="container">
         <div className="controls">
-          <h2>Strategy Parameters</h2>
+          <h2>Data Source</h2>
+          <div className="param-group">
+            <label>Crypto Symbol</label>
+            <select value={binanceSymbol} onChange={(e) => setBinanceSymbol(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#1e293b', color: '#e2e8f0' }}>
+              <option value="BTCUSDT">BTC/USDT</option>
+              <option value="ETHUSDT">ETH/USDT</option>
+              <option value="BNBUSDT">BNB/USDT</option>
+              <option value="ADAUSDT">ADA/USDT</option>
+            </select>
+          </div>
+          <div className="param-group">
+            <label>Timeframe</label>
+            <select value={binanceInterval} onChange={(e) => setBinanceInterval(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#1e293b', color: '#e2e8f0' }}>
+              <option value="1h">1 Hour</option>
+              <option value="4h">4 Hour</option>
+              <option value="1d">1 Day</option>
+            </select>
+          </div>
+          {isLoading && <p style={{ color: '#10b981', marginTop: '10px' }}>⏳ Fetching data...</p>}
+
+          <h2 style={{ marginTop: '30px' }}>Strategy Parameters</h2>
           <div className="param-group">
             <label>RSI Period: <span>{rsiPeriod}</span></label>
             <input type="range" min="5" max="50" value={rsiPeriod} onChange={(e) => setRsiPeriod(parseInt(e.target.value))} />
