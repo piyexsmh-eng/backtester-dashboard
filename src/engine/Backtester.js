@@ -54,7 +54,14 @@ class Backtester {
   run(data) {
     if (!data || data.length < this.emaLong + 1) {
       console.error('Insufficient data');
-      return { trades: [], metrics: {} };
+      return {
+        trades: [],
+        debugInfo: { error: 'Insufficient data', dataLength: data ? data.length : 0 },
+        currentSignal: { signal: 'HOLD', rsi: '0.00', emaShort: '0.00', emaLong: '0.00', price: '0.00' },
+        metrics: { totalTrades: 0, winRate: '0.00', profitFactor: '0.00', totalProfit: '0.00', totalLoss: '0.00', netProfit: '0.00' },
+        finalBalance: this.initialBalance.toFixed(2),
+        totalReturn: '0.00'
+      };
     }
 
     const closes = data.map(d => parseFloat(d.close));
