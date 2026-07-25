@@ -1,77 +1,51 @@
 // src/services/binance.js
-// Menggunakan CoinGecko market_chart API (data per jam, lebih banyak history)
+// Menggunakan Indodax API (exchange lokal Indonesia, tidak diblokir ISP)
 
-const SYMBOL_TO_COINGECKO_ID = {
-  'BTCUSDT': 'bitcoin',
-  'ETHUSDT': 'ethereum',
-  'BNBUSDT': 'binancecoin',
-  'SOLUSDT': 'solana',
-  'XRPUSDT': 'ripple',
-  'ADAUSDT': 'cardano',
-  'DOGEUSDT': 'dogecoin',
-  'AVAXUSDT': 'avalanche-2'
+const SYMBOL_TO_INDODAX_PAIR = {
+  'BTCUSDT': 'btcidr',
+  'ETHUSDT': 'ethidr',
+  'BNBUSDT': 'bnbidr',
+  'SOLUSDT': 'solidr',
+  'XRPUSDT': 'xrpidr',
+  'ADAUSDT': 'adaidr',
+  'DOGEUSDT': 'dogeidr',
+  'AVAXUSDT': 'avaxidr'
 };
 
-// Berapa hari data yang diambil, per pilihan interval
-const INTERVAL_TO_DAYS = {
-  '1h': 7,
-  '4h': 30,
-  '1d': 90
+const INTERVAL_TO_TF = {
+  '1h': '60',
+  '4h': '240',
+  '1d': '1D'
 };
 
-// Berapa jam digabung jadi 1 candle, per pilihan interval
-const INTERVAL_TO_HOURS = {
-  '1h': 1,
-  '4h': 4,
-  '1d': 24
+const INTERVAL_TO_SECONDS_BACK = {
+  '1h': 30 * 24 * 60 * 60,   // 30 hari
+  '4h': 90 * 24 * 60 * 60,   // 90 hari
+  '1d': 365 * 24 * 60 * 60   // 1 tahun
 };
 
 export async function fetchBinanceData(symbol = 'BTCUSDT', interval = '1h', limit = 300) {
-  const coinId = SYMBOL_TO_COINGECKO_ID[symbol] || 'bitcoin';
-  const days = INTERVAL_TO_DAYS[interval] || 7;
-  const groupHours = INTERVAL_TO_HOURS[interval] || 1;
+  const pair = SYMBOL_TO_INDODAX_PAIR[symbol] || 'btcidr';
+  const tf = INTERVAL_TO_TF[interval] || '60';
+  const secondsBack = INTERVAL_TO_SECONDS_BACK[interval] || 30 * 24 * 60 * 60;
 
-  const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - secondsBack;
+
+  const url = `https://indodax.com/tradingview/history_v2?from=${from}&to=${to}&symbol=${pair}&tf=${tf}`;
+
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`CoinGecko API error: ${response.status}`);
+  if (!response.ok) throw new Error(`Indodax API error: ${response.status}`);
 
-  const json = await response.json();
-  const prices = json.prices; // array of [timestamp, price]
+  const data = await response.json();
+  if (!Array.isArray(data)) throw new Error('Data tidak valid dari Indodax');
 
-  const msPerGroup = groupHours * 60 * 60 * 1000;
-  const candles = [];
-  let currentGroupKey = null;
-  let currentGroup = [];
-
-  for (const [timestamp, price] of prices) {
-    const groupKey = Math.floor(timestamp / msPerGroup) * msPerGroup;
-    if (currentGroupKey === null) currentGroupKey = groupKey;
-
-    if (groupKey !== currentGroupKey) {
-      candles.push({
-        time: currentGroupKey,
-        open: currentGroup[0],
-        high: Math.max(...currentGroup),
-        low: Math.min(...currentGroup),
-        close: currentGroup[currentGroup.length - 1],
-        volume: 0
-      });
-      currentGroup = [];
-      currentGroupKey = groupKey;
-    }
-    currentGroup.push(price);
-  }
-
-  if (currentGroup.length > 0) {
-    candles.push({
-      time: currentGroupKey,
-      open: currentGroup[0],
-      high: Math.max(...currentGroup),
-      low: Math.min(...currentGroup),
-      close: currentGroup[currentGroup.length - 1],
-      volume: 0
-    });
-  }
-
-  return candles.slice(-limit);
+  return data.map(candle => ({
+    time: candle.Time * 1000,
+    open: parseFloat(candle.Open),
+    high: parseFloat(candle.High),
+    low: parseFloat(candle.Low),
+    close: parseFloat(candle.Close),
+    volume: parseFloat(candle.Volume)
+  })).slice(-limit);
 }
