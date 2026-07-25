@@ -39,6 +39,8 @@ function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [interval, setInterval] = useState('1h');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationResults, setOptimizationResults] = useState([]);
 
   // Fungsi menjalankan backtest
   const runBacktest = (data, params) => {
@@ -83,6 +85,62 @@ function App() {
       alert('Gagal fetch data Binance, coba lagi.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Optimizer: coba berbagai kombinasi parameter, cari yang terbaik
+  const runOptimizer = async () => {
+    setIsOptimizing(true);
+    setOptimizationResults([]);
+    try {
+      const data = dataSource === 'binance'
+        ? await fetchBinanceData(symbol, interval, 300)
+        : generateMockData(300);
+
+      const rsiPeriods = [10, 14, 18];
+      const emaShorts = [5, 9, 12];
+      const emaLongs = [21, 26, 34];
+      const oversolds = [25, 30, 35];
+      const overboughts = [65, 70, 75];
+
+      const combos = [];
+      for (const rsiPeriod of rsiPeriods) {
+        for (const emaShort of emaShorts) {
+          for (const emaLong of emaLongs) {
+            if (emaShort >= emaLong) continue;
+            for (const rsiOversold of oversolds) {
+              for (const rsiOverbought of overboughts) {
+                combos.push({ rsiPeriod, emaShort, emaLong, rsiOversold, rsiOverbought });
+              }
+            }
+          }
+        }
+      }
+
+      const testResults = [];
+      for (const combo of combos) {
+        try {
+          const engine = new Backtester(combo);
+          const result = engine.run(data);
+          if (result.metrics.totalTrades >= 3) {
+            testResults.push({
+              ...combo,
+              totalTrades: result.metrics.totalTrades,
+              winRate: result.metrics.winRate,
+              profitFactor: parseFloat(result.metrics.profitFactor),
+              totalReturn: parseFloat(result.totalReturn)
+            });
+          }
+        } catch (e) {}
+      }
+
+      testResults.sort((a, b) => b.profitFactor - a.profitFactor);
+      setOptimizationResults(testResults.slice(0, 5));
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menjalankan optimizer.');
+    } finally {
+      setIsOptimizing(false);
     }
   };
 
@@ -158,6 +216,13 @@ function App() {
           >
             {isLoading ? 'Loading...' : '📊 Fetch Real Data'}
           </button>
+          <button
+            onClick={runOptimizer}
+            disabled={isOptimizing}
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium"
+          >
+            {isOptimizing ? "Optimizing..." : "🎯 Optimize Parameters"}
+          </button>
           <span className="text-xs text-slate-500">
             {dataSource === 'binance' ? '🟢 Live Data' : '⚪ Mock Data'}
           </span>
@@ -209,6 +274,41 @@ function App() {
 
         {/* Metrics */}
         {renderMetrics()}
+
+        {/* Optimizer Results */}
+        {optimizationResults.length > 0 && (
+          <div className="bg-slate-800 p-4 rounded-lg border border-purple-700 mb-6">
+            <h2 className="text-xl font-semibold mb-3 text-purple-400">🎯 Top 5 Kombinasi Terbaik</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-700">
+                    <th className="text-left py-2">RSI</th>
+                    <th className="text-left py-2">EMA S/L</th>
+                    <th className="text-left py-2">Over/Sold</th>
+                    <th className="text-left py-2">Trades</th>
+                    <th className="text-left py-2">Win%</th>
+                    <th className="text-left py-2">PF</th>
+                    <th className="text-left py-2">Return</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {optimizationResults.map((r, i) => (
+                    <tr key={i} className="border-b border-slate-700">
+                      <td className="py-2">{r.rsiPeriod}</td>
+                      <td className="py-2">{r.emaShort}/{r.emaLong}</td>
+                      <td className="py-2">{r.rsiOversold}/{r.rsiOverbought}</td>
+                      <td className="py-2">{r.totalTrades}</td>
+                      <td className="py-2">{r.winRate}%</td>
+                      <td className="py-2 text-purple-400 font-bold">{r.profitFactor.toFixed(2)}</td>
+                      <td className={`py-2 ${r.totalReturn > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{r.totalReturn.toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Recent Trades */}
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
