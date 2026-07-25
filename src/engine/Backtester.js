@@ -47,6 +47,8 @@ class Backtester {
     this.rsiOverbought = options.rsiOverbought || 70;
     this.initialBalance = options.initialBalance || 10000;
     this.positionSize = options.positionSize || 0.95;
+    this.stopLoss = options.stopLoss || 3;
+    this.takeProfit = options.takeProfit || 5;
   }
 
   run(data) {
@@ -85,7 +87,10 @@ class Backtester {
       // SELL SIGNAL
       if (position) {
         let shouldExit = false;
+        const currentPnLPercent = ((price - position.entryPrice) / position.entryPrice) * 100;
         if (rsi > this.rsiOverbought) shouldExit = true;
+        else if (currentPnLPercent <= -(this.stopLoss || 3)) shouldExit = true;
+        else if (currentPnLPercent >= (this.takeProfit || 5)) shouldExit = true;
         else if (i > position.entryIdx + 1 && emaShort < emaLong) shouldExit = true;
 
         if (shouldExit) {
