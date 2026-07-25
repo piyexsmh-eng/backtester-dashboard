@@ -158,7 +158,7 @@ function App() {
         <MetricCard label="Total Trades" value={totalTrades} />
         <MetricCard label="Win Rate" value={`${winRate}%`} />
         <MetricCard label="Return" value={`${returnPercent.toFixed(2)}%`} />
-        <MetricCard label="Profit Factor" value={profitFactor.toFixed(2)} />
+        <MetricCard label="Profit Factor" value={profitFactor} />
         <MetricCard label="Sharpe Ratio" value={sharpeRatio.toFixed(2)} />
         <MetricCard label="Max Drawdown" value={`${(maxDrawdown * 100).toFixed(2)}%`} />
       </div>
