@@ -117,6 +117,7 @@ class Backtester {
     return {
       trades,
       debugInfo: { rsiMin: Math.min(...rsiArray).toFixed(2), rsiMax: Math.max(...rsiArray).toFixed(2), dataLength: closes.length, tradesFound: trades.length },
+      currentSignal: (() => { const lastRsi = rsiArray[rsiArray.length - 1]; const lastEmaShort = emaShortArray[emaShortArray.length - 1]; const lastEmaLong = emaLongArray[emaLongArray.length - 1]; const lastPrice = closes[closes.length - 1]; let signal = "HOLD"; if (lastRsi < this.rsiOversold && lastEmaShort > lastEmaLong) signal = "BUY"; else if (lastRsi > this.rsiOverbought) signal = "SELL"; return { signal, rsi: lastRsi.toFixed(2), emaShort: lastEmaShort.toFixed(2), emaLong: lastEmaLong.toFixed(2), price: lastPrice.toFixed(2) }; })(),
       metrics,
       finalBalance: balance.toFixed(2),
       totalReturn: (((balance - this.initialBalance) / this.initialBalance) * 100).toFixed(2)

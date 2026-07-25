@@ -90,7 +90,12 @@ function App() {
   const renderMetrics = () => {
     if (!results) return null;
     const { totalTrades, winRate, profitFactor } = results.metrics; const returnPercent = parseFloat(results.totalReturn); const sharpeRatio = 0; const maxDrawdown = 0;
+    const signal = results.currentSignal;
     return (
+      <>
+      <div className={`p-4 rounded-lg mb-4 text-center font-bold text-xl ${signal.signal === "BUY" ? "bg-green-600" : signal.signal === "SELL" ? "bg-red-600" : "bg-slate-700"}`}>
+        Signal: {signal.signal} | Price: ${signal.price} | RSI: {signal.rsi}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <MetricCard label="Total Trades" value={totalTrades} />
         <MetricCard label="Win Rate" value={`${winRate}%`} />
@@ -99,6 +104,7 @@ function App() {
         <MetricCard label="Sharpe Ratio" value={sharpeRatio.toFixed(2)} />
         <MetricCard label="Max Drawdown" value={`${(maxDrawdown * 100).toFixed(2)}%`} />
       </div>
+      </>
     );
   };
 
