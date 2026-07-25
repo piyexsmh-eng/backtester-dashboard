@@ -57,6 +57,10 @@ class Backtester {
 
     const closes = data.map(d => parseFloat(d.close));
     const rsiArray = Indicators.calculateRSI(closes, this.rsiPeriod);
+    console.log("RSI min:", Math.min(...rsiArray), "max:", Math.max(...rsiArray), "length:", rsiArray.length);
+    console.log("RSI min:", Math.min(...rsiArray), "max:", Math.max(...rsiArray));
+    console.log("EMA Short sample:", emaShortArray?.slice(0,5));
+    console.log("Data length:", data.length, "Closes sample:", closes.slice(0,5));
     const emaShortArray = Indicators.calculateEMA(closes, this.emaShort);
     const emaLongArray = Indicators.calculateEMA(closes, this.emaLong);
 
