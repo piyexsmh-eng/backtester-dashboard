@@ -94,6 +94,7 @@ class Backtester {
           const profitPercent = ((price - position.entryPrice) / position.entryPrice * 100).toFixed(2);
           
           trades.push({
+            time: data[i].time,
             entryPrice: position.entryPrice.toFixed(2),
             exitPrice: price.toFixed(2),
             profit: profit.toFixed(2),

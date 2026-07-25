@@ -329,11 +329,11 @@ function App() {
                 ) : (
                   trades.map((trade, idx) => (
                     <tr key={idx} className="border-b border-slate-700/50">
-                      <td className="py-2">{new Date(trade.time).toLocaleString()}</td>
+                      <td className="py-2">{trade.time ? new Date(trade.time).toLocaleString() : '-'}</td>
                       <td className="py-2">{trade.type}</td>
-                      <td className="text-right py-2">${trade.price.toFixed(2)}</td>
-                      <td className={`text-right py-2 ${trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        ${trade.pnl.toFixed(2)}
+                      <td className="text-right py-2">${trade.entryPrice} → ${trade.exitPrice}</td>
+                      <td className={`text-right py-2 ${parseFloat(trade.profit) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        ${trade.profit} ({trade.profitPercent}%)
                       </td>
                     </tr>
                   ))
