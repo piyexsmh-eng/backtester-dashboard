@@ -16,7 +16,7 @@ const generateMockData = (count = 300) => {
   const data = [];
   let price = 50000;
   for (let i = 0; i < count; i++) {
-    const change = (Math.random() - 0.5) * 200;
+    const change = (Math.random() - 0.48) * 1500;
     price = Math.max(10000, price + change);
     data.push({
       time: Date.now() - (count - i) * 60000,
