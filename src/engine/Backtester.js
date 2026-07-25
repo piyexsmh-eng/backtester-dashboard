@@ -59,10 +59,6 @@ class Backtester {
 
     const closes = data.map(d => parseFloat(d.close));
     const rsiArray = Indicators.calculateRSI(closes, this.rsiPeriod);
-    console.log("RSI min:", Math.min(...rsiArray), "max:", Math.max(...rsiArray), "length:", rsiArray.length);
-    console.log("RSI min:", Math.min(...rsiArray), "max:", Math.max(...rsiArray));
-    console.log("EMA Short sample:", emaShortArray?.slice(0,5));
-    console.log("Data length:", data.length, "Closes sample:", closes.slice(0,5));
     const emaShortArray = Indicators.calculateEMA(closes, this.emaShort);
     const emaLongArray = Indicators.calculateEMA(closes, this.emaLong);
 
@@ -136,7 +132,7 @@ class Backtester {
       };
     }
 
-    let wins = 0, losses = 0;
+    let wins = 0;
     let totalProfit = 0, totalLoss = 0;
 
     for (const trade of trades) {
@@ -145,7 +141,6 @@ class Backtester {
         wins++;
         totalProfit += profit;
       } else {
-        losses++;
         totalLoss += Math.abs(profit);
       }
     }
