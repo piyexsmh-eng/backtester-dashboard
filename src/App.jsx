@@ -89,11 +89,11 @@ function App() {
   // Render metrics card
   const renderMetrics = () => {
     if (!results) return null;
-    const { totalTrades, winRate, returnPercent, profitFactor, sharpeRatio, maxDrawdown } = results;
+    const { totalTrades, winRate, profitFactor } = results.metrics; const returnPercent = parseFloat(results.totalReturn); const sharpeRatio = 0; const maxDrawdown = 0;
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <MetricCard label="Total Trades" value={totalTrades} />
-        <MetricCard label="Win Rate" value={`${(winRate * 100).toFixed(2)}%`} />
+        <MetricCard label="Win Rate" value={`${winRate}%`} />
         <MetricCard label="Return" value={`${returnPercent.toFixed(2)}%`} />
         <MetricCard label="Profit Factor" value={profitFactor.toFixed(2)} />
         <MetricCard label="Sharpe Ratio" value={sharpeRatio.toFixed(2)} />

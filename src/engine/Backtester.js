@@ -111,6 +111,7 @@ class Backtester {
     
     return {
       trades,
+      debugInfo: { rsiMin: Math.min(...rsiArray).toFixed(2), rsiMax: Math.max(...rsiArray).toFixed(2), dataLength: closes.length, tradesFound: trades.length },
       metrics,
       finalBalance: balance.toFixed(2),
       totalReturn: (((balance - this.initialBalance) / this.initialBalance) * 100).toFixed(2)
