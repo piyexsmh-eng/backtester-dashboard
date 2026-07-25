@@ -132,6 +132,11 @@ function App() {
               <option value="BTCUSDT">BTC/USDT</option>
               <option value="ETHUSDT">ETH/USDT</option>
               <option value="BNBUSDT">BNB/USDT</option>
+              <option value="SOLUSDT">SOL/USDT</option>
+              <option value="XRPUSDT">XRP/USDT</option>
+              <option value="ADAUSDT">ADA/USDT</option>
+              <option value="DOGEUSDT">DOGE/USDT</option>
+              <option value="AVAXUSDT">AVAX/USDT</option>
             </select>
           </div>
           <div>
